@@ -12,7 +12,7 @@ using System.Diagnostics;
 
 namespace Chaos.VarToConcrete
 {
-	[ExportSyntaxNodeCodeIssueProvider("Chaos.VarToConcrete", LanguageNames.CSharp, typeof(VariableDeclarationSyntax))]
+	[ExportSyntaxNodeCodeIssueProvider("Chaos.VarToConcrete", LanguageNames.CSharp, typeof(TypeSyntax))]
 	class CodeIssueProvider : ICodeIssueProvider
 	{
 		private readonly ICodeActionEditFactory editFactory;
@@ -25,13 +25,17 @@ namespace Chaos.VarToConcrete
 
 		public IEnumerable<CodeIssue> GetIssues(IDocument document, CommonSyntaxNode node, CancellationToken cancellationToken)
 		{
-			var declaration = (VariableDeclarationSyntax)node;
-			if (!declaration.Type.IsVar)
+			var typeSyntax = (TypeSyntax)node;
+			if (!typeSyntax.IsVar)
 				yield break;
 
 			ISemanticModel semanticModel = document.GetSemanticModel();
+			ITypeSymbol variableType = semanticModel.GetSemanticInfo(typeSyntax).Type;
 
-			yield return new CodeIssue(CodeIssue.Severity.Info, declaration.Type.Span, new ICodeAction[] { new ReplaceVarByConcreteAction(editFactory, document, declaration) });
+			if (variableType is ErrorTypeSymbol)
+				yield break;
+
+			yield return new CodeIssue(CodeIssue.Severity.Info, typeSyntax.Span, new ICodeAction[] { new ReplaceVarByConcreteAction(editFactory, document, typeSyntax) });
 		}
 
 		#region Unimplemented ICodeIssueProvider members

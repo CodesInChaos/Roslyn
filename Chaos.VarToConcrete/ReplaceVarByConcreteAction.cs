@@ -13,22 +13,22 @@ namespace Chaos.VarToConcrete
 	public class ReplaceVarByConcreteAction : ICodeAction
 	{
 		private IDocument document;
-		private VariableDeclarationSyntax declaration;
+		private TypeSyntax typeSyntax;
 		private ICodeActionEditFactory editFactory;
 		private string typeName;
 
-		public ReplaceVarByConcreteAction(ICodeActionEditFactory editFactory, IDocument document, VariableDeclarationSyntax declaration)
+		public ReplaceVarByConcreteAction(ICodeActionEditFactory editFactory, IDocument document, TypeSyntax typeSyntax)
 		{
 			this.editFactory = editFactory;
 			this.document = document;
-			this.declaration = declaration;
+			this.typeSyntax = typeSyntax;
 
 			var semanticModel = (SemanticModel)document.GetSemanticModel();
 			var syntaxTree = (SyntaxTree)document.GetSyntaxTree();
 
-			ILocation location = syntaxTree.GetLocation(declaration.Type);
-			var variable = declaration.Variables.Single();
-			ITypeSymbol variableType = semanticModel.GetSemanticInfo(declaration.Type).Type;
+			ILocation location = syntaxTree.GetLocation(typeSyntax);
+
+			ITypeSymbol variableType = semanticModel.GetSemanticInfo(typeSyntax).Type;
 			this.typeName = variableType.ToMinimalDisplayString((Location)location, semanticModel);
 		}
 		public string Description
@@ -43,11 +43,11 @@ namespace Chaos.VarToConcrete
 			TypeSyntax newDeclarationType =
 							   Syntax.IdentifierName(typeName)
 									 .WithLeadingTrivia(
-										  declaration.Type.GetLeadingTrivia())
+										  typeSyntax.GetLeadingTrivia())
 									 .WithTrailingTrivia(
-										 declaration.Type.GetTrailingTrivia());
+										 typeSyntax.GetTrailingTrivia());
 
-			return editFactory.CreateTreeTransformEdit(document.Project.Solution, syntaxTree, syntaxTree.Root.ReplaceNode(declaration.Type, newDeclarationType));
+			return editFactory.CreateTreeTransformEdit(document.Project.Solution, syntaxTree, syntaxTree.Root.ReplaceNode(typeSyntax, newDeclarationType));
 		}
 
 		public System.Windows.Media.ImageSource Icon

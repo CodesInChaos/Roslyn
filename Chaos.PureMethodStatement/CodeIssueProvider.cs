@@ -13,7 +13,7 @@ using System.Diagnostics.Contracts;
 
 namespace Chaos.PureMethodStatement
 {
-	[ExportSyntaxNodeCodeIssueProvider("Chaos.PureMethodStatement", LanguageNames.CSharp)]
+	[ExportSyntaxNodeCodeIssueProvider("Chaos.PureMethodStatement", LanguageNames.CSharp, typeof(InvocationExpressionSyntax))]
 	class CodeIssueProvider : ICodeIssueProvider
 	{
 		static void LoadKnownPure()
@@ -59,8 +59,7 @@ namespace Chaos.PureMethodStatement
 		{
 			LoadKnownPure();
 			var methodCall = node as InvocationExpressionSyntax;//Must be method call
-			if (methodCall == null)
-				yield break;
+			Debug.Assert(methodCall != null);
 
 			if (!(methodCall.Parent is ExpressionStatementSyntax))//Method call must be the outermost in a statement
 				yield break;
